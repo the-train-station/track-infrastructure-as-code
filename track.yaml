@@ -1,0 +1,11 @@
+slug: infrastructure-as-code
+title: Infrastructure as Code
+description: Terraform, CloudFormation, and infrastructure automation
+icon: Code
+color: amber
+tier: free
+lessons:
+  - { order: 1, dir: lesson-01-aws-cloudformation-workshop, tier: free }
+  - { order: 2, dir: lesson-02-opentofu, tier: free }
+  - { order: 3, dir: lesson-03-terraform-aws-modules, tier: free }
+  - { order: 4, dir: lesson-04-terraform-best-practices, tier: free }
