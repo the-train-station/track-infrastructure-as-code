@@ -27,7 +27,9 @@ jobs:
 
       - name: Reject PREMIUM sentinel comment
         run: |
-          if grep -rn '<!-- PREMIUM -->' --include='*.md' --include='*.yaml' --include='*.yml' .; then
+          # Scan published content only. Exclude .github so this workflow
+          # (which necessarily contains the literal sentinel) never self-matches.
+          if grep -rn '<!-- PREMIUM -->' --include='*.md' --include='*.yaml' --exclude-dir='.github' .; then
             echo "::error::The sentinel <!-- PREMIUM --> was found in this repo."
             exit 1
           fi
