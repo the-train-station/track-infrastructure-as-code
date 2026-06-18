@@ -6,10 +6,7 @@
 Terraform, CloudFormation, and infrastructure automation.
 
 Part of [Train Station](https://github.com/jon-the-dev/saas-train-station), a tiered
-learning platform. This repo holds the **free** lessons for this track. **6 additional
-premium lessons** — CDK Workshop, CloudFormation Reference Architectures,
-IaC testing with Terratest, Pulumi Examples, and more — are available in the
-Train Station app.
+learning platform. This repo holds the **free** lessons for this track. **6 additional premium lessons** — CDK Workshop (AWS CDK), CloudFormation Reference Architectures, HashiCorp Terraform Associate Certification Prep, IaC Testing with Terratest, and more — are available in the Train Station app.
 
 ## Lessons
 
