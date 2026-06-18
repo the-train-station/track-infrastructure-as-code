@@ -14,12 +14,14 @@ jobs:
       - name: Reject premium tier in lesson frontmatter
         run: |
           failed=0
-          while IFS= read -r -d '' readme; do
-            if awk '/^---$/{f=!f;next} f && /^tier:/{print FILENAME": "$0}' "$readme"                | grep -qi 'premium'; then
+          for readme in lesson-*/README.md; do
+            [ -e "$readme" ] || continue
+            tier=$(grep -m1 '^tier:' "$readme" | tr -d '[:space:]' | cut -d: -f2)
+            if [ "$tier" = "premium" ]; then
               echo "ERROR: premium tier detected in $readme"
               failed=1
             fi
-          done < <(find . -path './lesson-*/README.md' -print0)
+          done
           if [ "$failed" -eq 1 ]; then
             echo "::error::One or more lesson-*/README.md files contain tier: premium."
             exit 1
