@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Basic web server stack - VPC, Subnet, Security Group, and EC2 Instance.
+  This template contains bugs that must be fixed before deployment.
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    Description: EC2 instance type
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair for SSH access
+
+Resources:
+  # --- Networking ---
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      # BUG 3: CidrBlock is missing the /prefix notation
+      CidrBlock: 10.0.0.0
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: lab-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: lab-igw
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: lab-public-subnet
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: lab-public-rt
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # --- Security ---
+
+  # BUG 1: This resource is missing the Type property
+  WebServerSecurityGroup:
+    Properties:
+      GroupDescription: Allow HTTP, HTTPS, and SSH traffic
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: lab-web-sg
+
+  # --- Compute ---
+
+  WebServerInstance:
+    Type: AWS::EC2::Instance
+    # BUG 4: Circular dependency - WebServerInstance DependsOn WebServerSecurityGroup,
+    # but below we also add DependsOn on WebServerInstance from WebServerSecurityGroup
+    # Actually, the circular ref is between this instance and the EIP below.
+    DependsOn: ElasticIP
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      # BUG 2: Missing the ImageId property (required for EC2 instances)
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !GetAtt WebServerSecurityGroup.GroupId
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          echo "<h1>Hello from CloudFormation Lab</h1><p>Instance: $(hostname)</p>" > /var/www/html/index.html
+      Tags:
+        - Key: Name
+          Value: lab-web-server
+
+  # BUG 4 (continued): ElasticIP depends on WebServerInstance, creating a circular dependency
+  # WebServerInstance -> ElasticIP -> WebServerInstance
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    DependsOn: WebServerInstance
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref WebServerInstance
+
+Outputs:
+  WebServerPublicIP:
+    Description: Public IP address of the web server
+    Value: !Ref ElasticIP
+
+  WebServerURL:
+    Description: URL to access the web server
+    Value: !Sub "http://${ElasticIP}"
+
+  VpcId:
+    Description: VPC ID
+    Value: !Ref VPC
