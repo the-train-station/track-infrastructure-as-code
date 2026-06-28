@@ -90,6 +90,39 @@ Automate the plan/apply workflow to eliminate manual errors and enforce review g
 - Completion checkpoint: you can adapt the pattern to a second environment, identify its tradeoffs, and explain the operational risks it introduces.
 - Portfolio artifact: create a short note titled "Terraform Best Practices - applied takeaway" with the scenario you used, the decision you made, and one follow-up task you would assign to yourself or a team.
 
+## Deliverable
+
+Write a Terraform style and operations review for a small root module:
+
+- Directory structure assessment against the module/environment pattern
+- State strategy note covering backend, locking, encryption, and state file ownership
+- Version pinning review for Terraform, providers, modules, and `.terraform.lock.hcl`
+- Security scan summary with high-severity findings and justified suppressions
+- CI gate proposal listing commands that must pass before merge
+
+## Validation
+
+Use this local CI gate for the sample module:
+
+```bash
+terraform fmt -check -recursive
+terraform init -backend=false
+terraform validate
+terraform plan -lock=false -out=style-review.plan
+tflint --init
+tflint --recursive
+checkov -d .
+```
+
+The concrete outputs are the style review, state strategy note, and saved plan summary. A reviewer should be able to identify whether the module is ready for shared state and automated deployment.
+
+## Self-Assessment
+
+- Which convention most reduces future review effort?
+- What state failure mode is still possible after your backend choice?
+- Which validation belongs locally, in CI, and before production apply?
+- What policy would you enforce automatically instead of relying on human review?
+
 ## Related Resources
 
 - [Terraform Style Guide](https://developer.hashicorp.com/terraform/language/style) - HashiCorp's official conventions for code formatting, naming, and file organization

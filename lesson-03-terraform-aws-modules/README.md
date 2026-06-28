@@ -91,6 +91,40 @@ Participate in the module ecosystem and keep your configurations up to date:
 - Completion checkpoint: you can adapt the pattern to a second environment, identify its tradeoffs, and explain the operational risks it introduces.
 - Portfolio artifact: create a short note titled "Terraform AWS Modules - applied takeaway" with the scenario you used, the decision you made, and one follow-up task you would assign to yourself or a team.
 
+## Deliverable
+
+Complete a Terraform AWS module evaluation worksheet:
+
+- Module name, source, pinned version, license, maintainers, release cadence, and open issue signal
+- Required inputs, optional inputs you changed, and outputs consumed by another module
+- Plan summary with resource counts, IAM changes, public network exposure, logging, encryption, and tags
+- Decision: adopt, adopt with wrapper, fork, or reject
+- Follow-up backlog items for missing tests, policy exceptions, or upgrade monitoring
+
+## Validation
+
+Run the module through a local review gate before applying:
+
+```bash
+terraform init
+terraform fmt -check -recursive
+terraform validate
+terraform plan -out=module-review.plan
+terraform show -json module-review.plan > module-review.json
+tflint --init
+tflint
+checkov -d .
+```
+
+The concrete output is `module-review.plan` plus a short module evaluation report. If you cannot run `checkov` or `tflint`, record the reason and perform the same checks manually against the plan.
+
+## Self-Assessment
+
+- What value does the module provide compared with raw resources?
+- Which default would you override before production use?
+- What hidden dependency or IAM permission did the plan reveal?
+- What signal would trigger a future module upgrade?
+
 ## Related Resources
 
 - [Terraform Registry - AWS Modules](https://registry.terraform.io/namespaces/terraform-aws-modules) - Official registry listing with documentation, version history, and input/output references for every module
