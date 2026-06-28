@@ -86,6 +86,35 @@ After completing the labs, remove all deployed resources to avoid ongoing charge
 - Completion checkpoint: you can explain the core idea without notes and reproduce the smallest useful example from the resource.
 - Portfolio artifact: create a short note titled "AWS CloudFormation Workshop - applied takeaway" with the scenario you used, the decision you made, and one follow-up task you would assign to yourself or a team.
 
+## Deliverable
+
+Create a one-page CloudFormation template review packet:
+
+- A short description of the stack you deployed or inspected
+- The final template or a link to the template file
+- A change set summary showing resources added, modified, or removed
+- A cleanup note listing every stack and retained resource you verified
+- A review checklist with at least one finding or explicit "no issue" note for parameters, mappings, conditions, outputs, IAM permissions, networking exposure, deletion policies, and cost impact
+
+## Validation
+
+Run these checks before marking the lesson complete:
+
+```bash
+cfn-lint template.yaml
+aws cloudformation validate-template --template-body file://template.yaml
+aws cloudformation create-change-set --stack-name cfn101-review --change-set-name review-check --template-body file://template.yaml --change-set-type CREATE
+```
+
+If you use the console instead of the CLI, capture the equivalent lint result, ValidateTemplate result, and change set preview. The change set is the CI gate artifact: a reviewer should be able to approve or reject the proposed stack without applying it.
+
+## Self-Assessment
+
+- What failure would `cfn-lint` catch before CloudFormation deployment?
+- Which parameter, condition, or output makes this template more reusable?
+- What resource would create the largest cost or security risk if left deployed?
+- What evidence proves the stack was cleaned up?
+
 ## Related Resources
 
 - [AWS CloudFormation Documentation](https://docs.aws.amazon.com/cloudformation/) - Official reference for all resource types, intrinsic functions, and template syntax

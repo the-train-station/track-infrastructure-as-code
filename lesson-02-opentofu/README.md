@@ -42,11 +42,16 @@ OpenTofu maintains drop-in compatibility with Terraform 1.5.x configurations, pr
    ```
 2. **Linux (Debian/Ubuntu)**:
    ```bash
-   curl -fsSL https://get.opentofu.org/install-opentofu.sh | sh -s -- --method deb
+   # Prefer the official OpenTofu package repository instructions for your distro.
+   # Verify the repository signing key fingerprint before installing.
+   sudo apt-get update
+   sudo apt-get install opentofu
    ```
 3. **Linux (RPM-based)**:
    ```bash
-   curl -fsSL https://get.opentofu.org/install-opentofu.sh | sh -s -- --method rpm
+   # Prefer the official OpenTofu package repository instructions for your distro.
+   # Verify the repository signing key fingerprint before installing.
+   sudo dnf install opentofu
    ```
 4. Verify the installation:
    ```bash
@@ -126,6 +131,37 @@ OpenTofu maintains drop-in compatibility with Terraform 1.5.x configurations, pr
 - Translate the lesson into an IaC operating habit: repeatable plans, state safety, reviewable diffs, module boundaries, policy checks, and cleanup of any billable resources.
 - Completion checkpoint: you can adapt the pattern to a second environment, identify its tradeoffs, and explain the operational risks it introduces.
 - Portfolio artifact: create a short note titled "OpenTofu - applied takeaway" with the scenario you used, the decision you made, and one follow-up task you would assign to yourself or a team.
+
+## Deliverable
+
+Produce an OpenTofu migration readiness checklist for one Terraform project:
+
+- Current Terraform version, provider versions, backend type, and state location
+- Compatibility result for `tofu init` and `tofu plan`
+- Registry or provider source changes required, if any
+- State encryption recommendation with key provider choice and secret handling notes
+- A go/no-go decision with the top three migration risks
+
+## Validation
+
+Run the checks in a disposable copy of the project:
+
+```bash
+terraform init -backend=false
+terraform validate
+tofu init -backend=false
+tofu validate
+tofu plan -out=tofu.plan
+```
+
+Compare the Terraform and OpenTofu validation results. If a remote backend is involved, add a state strategy note explaining whether the migration uses existing state, a copied state file, or a new backend path.
+
+## Self-Assessment
+
+- What specific compatibility issue would block this project from moving to OpenTofu?
+- Which state data is sensitive enough to require encryption?
+- How would you roll back if the first OpenTofu plan differs from the Terraform plan?
+- What evidence would convince a reviewer that this migration is low risk?
 
 ## Related Resources
 
