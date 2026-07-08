@@ -9,3 +9,4 @@ lessons:
   - { order: 2, dir: lesson-02-opentofu, tier: free }
   - { order: 3, dir: lesson-03-terraform-aws-modules, tier: free }
   - { order: 4, dir: lesson-04-terraform-best-practices, tier: free }
+  - { order: 11, dir: lesson-11-building-immutable-amis-with-packer, tier: free }
