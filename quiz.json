@@ -1,0 +1,854 @@
+{
+  "version": 1,
+  "track_slug": "infrastructure-as-code",
+  "passing_score": 80,
+  "lessons": [
+    {
+      "lesson_dir": "lesson-01-aws-cloudformation-workshop",
+      "stem": "aws-cloudformation-workshop",
+      "resource_id": "infrastructure-as-code-aws-cloudformation-workshop",
+      "content_status": "authored",
+      "objectives": [
+        "Explain what each CloudFormation template section contributes to a stack",
+        "Choose between Ref, Fn::GetAtt, and Fn::Sub for a given template reference",
+        "Explain how CloudFormation orders resource creation and when DependsOn is required",
+        "Use a change set to review a stack update before it is applied",
+        "Predict CloudFormation rollback behavior when a stack operation fails"
+      ],
+      "questions": [
+        {
+          "id": "infrastructure-as-code-aws-cloudformation-workshop-q1",
+          "type": "multiple_choice",
+          "difficulty": "beginner",
+          "objective": "Explain what each CloudFormation template section contributes to a stack",
+          "prompt": "A template hard-codes an AMI ID, so it only deploys in us-east-1. You want a region-keyed lookup table so the same template picks the right AMI in any region. Which template section holds that table?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Mappings, keyed by AWS::Region"
+            },
+            {
+              "id": "b",
+              "text": "Conditions, one per supported region"
+            },
+            {
+              "id": "c",
+              "text": "Metadata, under an AWS::CloudFormation key"
+            },
+            {
+              "id": "d",
+              "text": "Parameters, with one allowed value per region"
+            }
+          ],
+          "answer": [
+            "a"
+          ],
+          "explanation": "Mappings are fixed key/value lookup tables resolved with Fn::FindInMap, and the canonical use is a region-to-AMI table. Parameters accept values at deploy time rather than storing a lookup table, so they would push the region choice back onto whoever runs the stack.",
+          "source": "Lesson section: 'Step 3: Work Through the Foundational Modules'"
+        },
+        {
+          "id": "infrastructure-as-code-aws-cloudformation-workshop-q2",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Choose between Ref, Fn::GetAtt, and Fn::Sub for a given template reference",
+          "prompt": "Your template defines a load balancer with logical ID myELB, and a Route 53 record in the same template needs the load balancer's DNS name. What do you write?",
+          "options": [
+            {
+              "id": "a",
+              "text": "!Ref myELB"
+            },
+            {
+              "id": "b",
+              "text": "!Sub \"${myELB}\""
+            },
+            {
+              "id": "c",
+              "text": "!GetAtt myELB.DNSName"
+            },
+            {
+              "id": "d",
+              "text": "!ImportValue myELB-DNSName"
+            }
+          ],
+          "answer": [
+            "c"
+          ],
+          "explanation": "Ref returns a resource's default identifier (for an ELB, its name), while Fn::GetAtt returns a named attribute such as DNSName. !Sub \"${myELB}\" is just Ref in interpolated form, so it returns the same default value rather than the DNS name.",
+          "source": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html"
+        },
+        {
+          "id": "infrastructure-as-code-aws-cloudformation-workshop-q3",
+          "type": "true_false",
+          "difficulty": "beginner",
+          "objective": "Explain how CloudFormation orders resource creation and when DependsOn is required",
+          "prompt": "A subnet's VpcId property is set with !Ref MyVpc. A DependsOn: MyVpc attribute must also be added so the subnet waits for the VPC.",
+          "options": [
+            {
+              "id": "a",
+              "text": "True"
+            },
+            {
+              "id": "b",
+              "text": "False"
+            }
+          ],
+          "answer": [
+            "b"
+          ],
+          "explanation": "CloudFormation derives the dependency graph from Ref and Fn::GetAtt references, so the subnet already waits for the VPC. DependsOn is only needed for ordering that is not expressed by a reference, such as waiting for an internet gateway attachment before creating an instance with a public IP.",
+          "source": "Lesson section: 'Key Takeaways'"
+        },
+        {
+          "id": "infrastructure-as-code-aws-cloudformation-workshop-q4",
+          "type": "multi_select",
+          "difficulty": "intermediate",
+          "objective": "Use a change set to review a stack update before it is applied",
+          "prompt": "You created a change set against a running production stack instead of updating it directly. Which statements about that change set are accurate?",
+          "options": [
+            {
+              "id": "a",
+              "text": "It reports resources that were modified outside CloudFormation"
+            },
+            {
+              "id": "b",
+              "text": "It applies itself automatically once the review window expires"
+            },
+            {
+              "id": "c",
+              "text": "Creating the change set makes no changes to the stack's resources"
+            },
+            {
+              "id": "d",
+              "text": "It flags which resources CloudFormation would replace rather than modify in place"
+            },
+            {
+              "id": "e",
+              "text": "It must be explicitly executed before any change reaches the stack"
+            }
+          ],
+          "answer": [
+            "c",
+            "d",
+            "e"
+          ],
+          "explanation": "A change set is a preview: it is created, reviewed, and then executed as a separate action, and it marks each resource with whether the update requires replacement. Detecting out-of-band console edits is drift detection, which is a different operation and is not part of the change set.",
+          "source": "Lesson section: 'Step 4: Progress to Intermediate Topics'"
+        },
+        {
+          "id": "infrastructure-as-code-aws-cloudformation-workshop-q5",
+          "type": "multiple_choice",
+          "difficulty": "advanced",
+          "objective": "Predict CloudFormation rollback behavior when a stack operation fails",
+          "prompt": "A brand-new stack creates a VPC, a subnet, and an EC2 instance. The VPC and subnet succeed, then the instance fails on an invalid instance type. With default settings, what state are you left in?",
+          "options": [
+            {
+              "id": "a",
+              "text": "The stack stops in CREATE_FAILED but keeps the VPC and subnet, so you can fix the type and retry"
+            },
+            {
+              "id": "b",
+              "text": "The stack reaches UPDATE_ROLLBACK_COMPLETE and reverts every resource to the previous template"
+            },
+            {
+              "id": "c",
+              "text": "The stack pauses in CREATE_IN_PROGRESS until you correct the template and resume the operation"
+            },
+            {
+              "id": "d",
+              "text": "The stack ends in ROLLBACK_COMPLETE with the VPC and subnet deleted, and the name is unusable"
+            }
+          ],
+          "answer": [
+            "d"
+          ],
+          "explanation": "The default OnFailure behavior for a create is ROLLBACK, which deletes everything the stack created and leaves the stack in ROLLBACK_COMPLETE — a terminal state that cannot be updated, only deleted. Keeping the successful resources requires explicitly setting OnFailure to DO_NOTHING; UPDATE_ROLLBACK_COMPLETE only applies to a stack that already had a deployed template to revert to.",
+          "source": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html"
+        }
+      ]
+    },
+    {
+      "lesson_dir": "lesson-02-opentofu",
+      "stem": "opentofu",
+      "resource_id": "infrastructure-as-code-opentofu",
+      "content_status": "authored",
+      "objectives": [
+        "Explain OpenTofu's origin and licensing relative to Terraform",
+        "Plan a migration of an existing Terraform project to OpenTofu",
+        "Configure client-side state encryption using key provider and method blocks",
+        "Choose a production key provider and handle encryption method rollover",
+        "Explain how OpenTofu resolves provider and module source addresses"
+      ],
+      "questions": [
+        {
+          "id": "infrastructure-as-code-opentofu-q1",
+          "type": "multiple_choice",
+          "difficulty": "beginner",
+          "objective": "Explain OpenTofu's origin and licensing relative to Terraform",
+          "prompt": "A legal review asks why your team is evaluating OpenTofu instead of staying on Terraform. Which factual statement describes the licensing situation?",
+          "options": [
+            {
+              "id": "a",
+              "text": "OpenTofu is a proprietary Linux Foundation product offered with a free community edition and paid support"
+            },
+            {
+              "id": "b",
+              "text": "OpenTofu acquired the Terraform codebase and relicensed it under Apache 2.0 with Linux Foundation backing"
+            },
+            {
+              "id": "c",
+              "text": "OpenTofu forked Terraform after its license moved from MPL 2.0 to BSL 1.1, and stayed on MPL 2.0"
+            },
+            {
+              "id": "d",
+              "text": "OpenTofu is a HashiCorp-maintained fork offered to the community under the same BSL 1.1 terms as Terraform"
+            }
+          ],
+          "answer": [
+            "c"
+          ],
+          "explanation": "HashiCorp changed Terraform's license from the Mozilla Public License 2.0 to the Business Source License 1.1, and the OpenTofu fork was created and placed under Linux Foundation stewardship to remain MPL 2.0. OpenTofu is a community fork, not a HashiCorp product or an acquisition.",
+          "source": "Lesson section: 'Overview'"
+        },
+        {
+          "id": "infrastructure-as-code-opentofu-q2",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Plan a migration of an existing Terraform project to OpenTofu",
+          "prompt": "A Terraform 1.5.x project keeps its state in an S3 backend. Your migration test runs `tofu init` and `tofu plan`. What should you expect from the backend and the plan?",
+          "options": [
+            {
+              "id": "a",
+              "text": "The S3 backend works unchanged, and the plan should show no resource changes"
+            },
+            {
+              "id": "b",
+              "text": "The state must be exported and re-imported because the file format differs"
+            },
+            {
+              "id": "c",
+              "text": "The backend block has to be rewritten to a tofu-specific backend type"
+            },
+            {
+              "id": "d",
+              "text": "The plan will show every managed resource as replaced until you run apply once to rewrite state"
+            }
+          ],
+          "answer": [
+            "a"
+          ],
+          "explanation": "OpenTofu keeps drop-in compatibility with Terraform 1.5.x state, backends, providers, and modules, so a clean migration produces a no-change plan against the same backend. A plan that shows unexpected changes is the signal to stop and investigate, not the expected outcome.",
+          "source": "Lesson section: 'Step 3: Migrate an Existing Terraform Project'"
+        },
+        {
+          "id": "infrastructure-as-code-opentofu-q3",
+          "type": "multi_select",
+          "difficulty": "intermediate",
+          "objective": "Configure client-side state encryption using key provider and method blocks",
+          "prompt": "You are adding an `encryption` block to an OpenTofu configuration. Which statements about how it works are correct?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Encryption is enabled per backend and only works with the S3 backend"
+            },
+            {
+              "id": "b",
+              "text": "A key_provider block and a method block must both be declared and wired together"
+            },
+            {
+              "id": "c",
+              "text": "Encryption happens client-side, so the backend stores only ciphertext"
+            },
+            {
+              "id": "d",
+              "text": "A separate `plan` block encrypts saved plan files as well as state"
+            },
+            {
+              "id": "e",
+              "text": "The passphrase belongs in the committed .tf file so every operator can decrypt state"
+            }
+          ],
+          "answer": [
+            "b",
+            "c",
+            "d"
+          ],
+          "explanation": "State encryption is a client-side feature: you declare a key_provider (such as pbkdf2 or aws_kms), a method (such as aes_gcm) that consumes its keys, and then apply that method to `state` and optionally `plan`. It is backend-independent, and committing the passphrase would defeat the point of encrypting the state at all.",
+          "source": "https://opentofu.org/docs/language/state/encryption/"
+        },
+        {
+          "id": "infrastructure-as-code-opentofu-q4",
+          "type": "multiple_choice",
+          "difficulty": "advanced",
+          "objective": "Choose a production key provider and handle encryption method rollover",
+          "prompt": "Existing state is encrypted with a pbkdf2 passphrase and you are moving to an AWS KMS key provider. How do you switch without a window where OpenTofu cannot read the current state?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Remove the encryption block, apply once to write plaintext state, then add the KMS configuration back"
+            },
+            {
+              "id": "b",
+              "text": "Attach both key providers to the same method so OpenTofu tries each key in turn when reading"
+            },
+            {
+              "id": "c",
+              "text": "Run `tofu state pull`, decrypt the file manually with the passphrase, then push the plaintext state back"
+            },
+            {
+              "id": "d",
+              "text": "Make the KMS method primary and keep the old method in a `fallback` block"
+            }
+          ],
+          "answer": [
+            "d"
+          ],
+          "explanation": "OpenTofu's fallback block exists for exactly this rollover: it writes with the new method but will still read state that was encrypted with the old one. Round-tripping through plaintext state, whether manually or by dropping the block, exposes every secret in state to whoever can read the backend.",
+          "source": "https://opentofu.org/docs/language/state/encryption/"
+        },
+        {
+          "id": "infrastructure-as-code-opentofu-q5",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Explain how OpenTofu resolves provider and module source addresses",
+          "prompt": "Your configuration declares `source = \"hashicorp/aws\"` in required_providers and you run `tofu init`. Where does that provider come from?",
+          "options": [
+            {
+              "id": "a",
+              "text": "The address is invalid without a full hostname, so init fails"
+            },
+            {
+              "id": "b",
+              "text": "It resolves through OpenTofu's default registry, registry.opentofu.org"
+            },
+            {
+              "id": "c",
+              "text": "It always resolves to registry.terraform.io because of the hashicorp namespace"
+            },
+            {
+              "id": "d",
+              "text": "It downloads directly from the provider's GitHub releases page"
+            }
+          ],
+          "answer": [
+            "b"
+          ],
+          "explanation": "A short source address expands against OpenTofu's default registry host, registry.opentofu.org, which mirrors the provider ecosystem under open governance. You can still point at registry.terraform.io by writing the fully qualified source address, but the namespace alone does not change the default host.",
+          "source": "Lesson section: 'Step 2: Explore the OpenTofu Registry'"
+        }
+      ]
+    },
+    {
+      "lesson_dir": "lesson-03-terraform-aws-modules",
+      "stem": "terraform-aws-modules",
+      "resource_id": "infrastructure-as-code-terraform-aws-modules",
+      "content_status": "authored",
+      "objectives": [
+        "Locate a module's inputs, outputs, and version constraints in its standard file layout",
+        "Pin a module version correctly for registry and Git sources",
+        "Wire one module's outputs into another module's inputs",
+        "Use for_each on a module block instead of count to avoid index churn",
+        "Evaluate whether to adopt, wrap, fork, or reject a community module"
+      ],
+      "questions": [
+        {
+          "id": "infrastructure-as-code-terraform-aws-modules-q1",
+          "type": "multiple_choice",
+          "difficulty": "beginner",
+          "objective": "Locate a module's inputs, outputs, and version constraints in its standard file layout",
+          "prompt": "You cloned the terraform-aws-modules VPC module and need to know every input you can set and what each one defaults to. Which file do you read?",
+          "options": [
+            {
+              "id": "a",
+              "text": "main.tf"
+            },
+            {
+              "id": "b",
+              "text": "versions.tf"
+            },
+            {
+              "id": "c",
+              "text": "variables.tf"
+            },
+            {
+              "id": "d",
+              "text": "outputs.tf"
+            }
+          ],
+          "answer": [
+            "c"
+          ],
+          "explanation": "variables.tf declares every input with its type, description, and default. main.tf shows how those inputs are consumed by resources but does not give you the full input contract in one place.",
+          "source": "Lesson section: 'Step 2: Understand Module Structure'"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-aws-modules-q2",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Pin a module version correctly for registry and Git sources",
+          "prompt": "A module block sets `source = \"git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git\"` and `version = \"5.0.0\"`. Why is this configuration not actually pinned?",
+          "options": [
+            {
+              "id": "a",
+              "text": "The version argument only works for registry sources; Git sources use a ?ref= parameter"
+            },
+            {
+              "id": "b",
+              "text": "The version string needs a constraint operator such as \"~> 5.0.0\" before Terraform will honor it"
+            },
+            {
+              "id": "c",
+              "text": "Git-sourced modules are pinned through .terraform.lock.hcl rather than in the module block itself"
+            },
+            {
+              "id": "d",
+              "text": "The git:: prefix disables version resolution unless you also specify a submodule path in the source"
+            }
+          ],
+          "answer": [
+            "a"
+          ],
+          "explanation": "Terraform only honors the version argument for registry modules; for a Git source you pin by appending a ref such as `?ref=v5.0.0` to the source URL. The lock file tracks providers only, so it will not save you here either.",
+          "source": "https://developer.hashicorp.com/terraform/language/modules/sources"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-aws-modules-q3",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Wire one module's outputs into another module's inputs",
+          "prompt": "You call the VPC module as `module \"vpc\"` and now need to pass its private subnet IDs into an RDS module. Which reference works, and what makes it work?",
+          "options": [
+            {
+              "id": "a",
+              "text": "aws_subnet.private[*].id, because module resources are addressable from the root"
+            },
+            {
+              "id": "b",
+              "text": "module.vpc.private_subnets, because the module declares that value in outputs.tf"
+            },
+            {
+              "id": "c",
+              "text": "module.vpc.aws_subnet.private, because module internals are namespaced by module name"
+            },
+            {
+              "id": "d",
+              "text": "data.terraform_remote_state.vpc.private_subnets, because modules communicate through state"
+            }
+          ],
+          "answer": [
+            "b"
+          ],
+          "explanation": "A module exposes only what its outputs.tf declares, referenced as module.<name>.<output>, and Terraform builds the dependency edge from that reference. A module's internal resource addresses are not reachable from the caller, and terraform_remote_state is for reading a separate state file, not a module in the same configuration.",
+          "source": "Lesson section: 'Step 4: Integrate Module Outputs'"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-aws-modules-q4",
+          "type": "multiple_choice",
+          "difficulty": "advanced",
+          "objective": "Use for_each on a module block instead of count to avoid index churn",
+          "prompt": "A module block uses `count = length(var.tenants)` over the list [\"alpha\", \"bravo\", \"charlie\"]. You delete \"bravo\" and the plan proposes destroying and recreating charlie's resources. What is happening, and what fixes it long term?",
+          "options": [
+            {
+              "id": "a",
+              "text": "count re-evaluates the list on every plan; pin it into a local value so the ordering stabilizes"
+            },
+            {
+              "id": "b",
+              "text": "The list changed length, so add a lifecycle ignore_changes on the count argument"
+            },
+            {
+              "id": "c",
+              "text": "Terraform lost track of the resource IDs in state; run terraform refresh before planning again"
+            },
+            {
+              "id": "d",
+              "text": "Removing index 1 shifts charlie from [2] to [1], so switch to for_each keyed by tenant name"
+            }
+          ],
+          "answer": [
+            "d"
+          ],
+          "explanation": "count addresses instances by position, so deleting an element renumbers everything after it and Terraform reads module.tenant[1] as a different object than before. for_each addresses instances by a stable key, so removing \"bravo\" touches only that instance; migrating existing state to the new addresses is done with moved blocks, not refresh.",
+          "source": "https://developer.hashicorp.com/terraform/language/meta-arguments/for_each"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-aws-modules-q5",
+          "type": "multi_select",
+          "difficulty": "intermediate",
+          "objective": "Evaluate whether to adopt, wrap, fork, or reject a community module",
+          "prompt": "You are writing an adoption recommendation for a community AWS module. Which checks actually inform the decision?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Read the CHANGELOG for the target version before upgrading across a major release"
+            },
+            {
+              "id": "b",
+              "text": "Treat a high GitHub star count as evidence the module is currently maintained"
+            },
+            {
+              "id": "c",
+              "text": "Run terraform init -upgrade in production to confirm the newest version applies cleanly"
+            },
+            {
+              "id": "d",
+              "text": "Read versions.tf and confirm its provider constraints do not conflict with yours"
+            },
+            {
+              "id": "e",
+              "text": "Run terraform plan and review IAM changes, public exposure, encryption, and tags"
+            }
+          ],
+          "answer": [
+            "a",
+            "d",
+            "e"
+          ],
+          "explanation": "Provider constraint conflicts, the plan's security and IAM footprint, and the changelog for the exact version you are adopting are the signals that change your decision. Stars measure past popularity rather than current maintenance, and upgrading in production to see what happens skips the review gate entirely.",
+          "source": "Lesson section: 'Deliverable'"
+        }
+      ]
+    },
+    {
+      "lesson_dir": "lesson-04-terraform-best-practices",
+      "stem": "terraform-best-practices",
+      "resource_id": "infrastructure-as-code-terraform-best-practices",
+      "content_status": "authored",
+      "objectives": [
+        "Explain what remote state locking prevents and why it is required for shared state",
+        "Choose between Terraform workspaces and a directory-per-environment layout",
+        "Explain what the dependency lock file covers and how to update it",
+        "Design a pipeline where the plan that was reviewed is the plan that is applied",
+        "Validate variable inputs at the module boundary"
+      ],
+      "questions": [
+        {
+          "id": "infrastructure-as-code-terraform-best-practices-q1",
+          "type": "multiple_choice",
+          "difficulty": "beginner",
+          "objective": "Explain what remote state locking prevents and why it is required for shared state",
+          "prompt": "Two engineers run terraform apply against the same remote state at the same time, and the backend has no locking. What is the characteristic failure?",
+          "options": [
+            {
+              "id": "a",
+              "text": "The second apply is queued automatically and runs once the first one finishes"
+            },
+            {
+              "id": "b",
+              "text": "One apply's state write overwrites the other's, so state no longer matches reality"
+            },
+            {
+              "id": "c",
+              "text": "Both applies abort immediately with a state serial mismatch error before touching anything"
+            },
+            {
+              "id": "d",
+              "text": "The cloud provider rejects the duplicate API calls, so both sets of changes are discarded"
+            }
+          ],
+          "answer": [
+            "b"
+          ],
+          "explanation": "Without a lock, both runs read the same state, act on it, and write back — the last writer wins and the other run's recorded resources are lost, leaving orphaned infrastructure that Terraform no longer manages. Queuing is what locking gives you; it does not happen on its own.",
+          "source": "Lesson section: 'Step 2: Configure Remote State and Workspaces'"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-best-practices-q2",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Choose between Terraform workspaces and a directory-per-environment layout",
+          "prompt": "Dev, staging, and prod each live in a separate AWS account, and prod has a WAF that the other environments do not. Which layout fits, and why?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Workspaces, since terraform.workspace can select the target account and toggle the WAF on"
+            },
+            {
+              "id": "b",
+              "text": "Workspaces, since separate state keys already give per-account isolation"
+            },
+            {
+              "id": "c",
+              "text": "Directory per environment, since each one carries its own backend and provider"
+            },
+            {
+              "id": "d",
+              "text": "A single root module with count guards on the WAF resources and a provider alias per account"
+            }
+          ],
+          "answer": [
+            "c"
+          ],
+          "explanation": "Workspaces share one backend block and one provider configuration, so they cannot cleanly span separate accounts or credentials. A directory per environment gives each one its own backend, provider, and variable file, which is what structural differences and account isolation both require.",
+          "source": "Lesson section: 'Step 2: Configure Remote State and Workspaces'"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-best-practices-q3",
+          "type": "multi_select",
+          "difficulty": "intermediate",
+          "objective": "Explain what the dependency lock file covers and how to update it",
+          "prompt": "Which statements about .terraform.lock.hcl are correct?",
+          "options": [
+            {
+              "id": "a",
+              "text": "It pins remote module versions so repeated runs resolve the same module release"
+            },
+            {
+              "id": "b",
+              "text": "It records the Terraform CLI version the configuration was last run with"
+            },
+            {
+              "id": "c",
+              "text": "It should be committed to version control and reviewed like source code"
+            },
+            {
+              "id": "d",
+              "text": "It records selected provider versions along with checksums for their packages"
+            },
+            {
+              "id": "e",
+              "text": "terraform init -upgrade re-selects the newest versions allowed by your constraints"
+            }
+          ],
+          "answer": [
+            "c",
+            "d",
+            "e"
+          ],
+          "explanation": "The lock file records provider selections and package hashes, belongs in version control, and is re-resolved by terraform init -upgrade. It does not track modules or the CLI version — remote module versions are re-resolved on every init, which is why module version constraints have to be tight on their own.",
+          "source": "https://developer.hashicorp.com/terraform/language/files/dependency-lock"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-best-practices-q4",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Validate variable inputs at the module boundary",
+          "prompt": "A module takes an `environment` string and only dev, staging, and prod are legal. You want the run to fail fast with a readable message. Where do you enforce that?",
+          "options": [
+            {
+              "id": "a",
+              "text": "A validation block on the variable, so the error surfaces during plan"
+            },
+            {
+              "id": "b",
+              "text": "A lifecycle precondition on the first resource that consumes the value"
+            },
+            {
+              "id": "c",
+              "text": "A tfsec custom rule that runs in CI after the plan is generated"
+            },
+            {
+              "id": "d",
+              "text": "A local value that raises an error when the input is not in an allowed list"
+            }
+          ],
+          "answer": [
+            "a"
+          ],
+          "explanation": "A validation block on the variable rejects the value at the module boundary with your own error_message before any resource is evaluated. A precondition also works but fires deeper in the graph and ties the check to one resource, and a CI scanner catches it later and further from the person who typed the value.",
+          "source": "Lesson section: 'Step 3: Enforce Version Constraints and Variable Validation'"
+        },
+        {
+          "id": "infrastructure-as-code-terraform-best-practices-q5",
+          "type": "multiple_choice",
+          "difficulty": "advanced",
+          "objective": "Design a pipeline where the plan that was reviewed is the plan that is applied",
+          "prompt": "Your pipeline posts a plan as a PR comment, and on merge it re-runs terraform plan and applies. A reviewer approved a two-resource change but the merge job created a NAT gateway nobody reviewed. What is the fix?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Run terraform refresh before the merge plan so state matches live infrastructure"
+            },
+            {
+              "id": "b",
+              "text": "Require two approvals on the pull request before merge is permitted"
+            },
+            {
+              "id": "c",
+              "text": "Add a policy scanner to the merge job so unreviewed resources are blocked from applying"
+            },
+            {
+              "id": "d",
+              "text": "Save the reviewed plan with -out and have the merge job apply that saved plan file"
+            }
+          ],
+          "answer": [
+            "d"
+          ],
+          "explanation": "Re-planning at merge time re-reads state and configuration, so drift or another merged PR can widen the change set after review — the approval no longer describes what gets applied. Saving the plan with `-out` and applying that artifact makes the reviewed plan and the executed plan the same object; approvals and scanners are useful but do not close that gap.",
+          "source": "Lesson section: 'Step 5: Build a Terraform CI/CD Pipeline'"
+        }
+      ]
+    },
+    {
+      "lesson_dir": "lesson-11-building-immutable-amis-with-packer",
+      "stem": "building-immutable-amis-with-packer",
+      "resource_id": "infrastructure-as-code-building-immutable-amis-with-packer",
+      "content_status": "authored",
+      "objectives": [
+        "Distinguish Packer sources, provisioners, and post-processors by what each one does",
+        "Structure an HCL2 template with packer, source, and build blocks",
+        "Diagnose a build failure caused by a source image and provisioner mismatch",
+        "Apply the immutable infrastructure workflow to patch a running fleet",
+        "Identify and clean up every billable artifact a Packer build leaves behind"
+      ],
+      "questions": [
+        {
+          "id": "infrastructure-as-code-building-immutable-amis-with-packer-q1",
+          "type": "multiple_choice",
+          "difficulty": "beginner",
+          "objective": "Distinguish Packer sources, provisioners, and post-processors by what each one does",
+          "prompt": "In an HCL2 template targeting AWS, which element launches the temporary EC2 instance and captures the finished AMI?",
+          "options": [
+            {
+              "id": "a",
+              "text": "The provisioner \"shell\" block"
+            },
+            {
+              "id": "b",
+              "text": "The source \"amazon-ebs\" block"
+            },
+            {
+              "id": "c",
+              "text": "The post-processor \"manifest\" block"
+            },
+            {
+              "id": "d",
+              "text": "The packer required_plugins block"
+            }
+          ],
+          "answer": [
+            "b"
+          ],
+          "explanation": "The source block is the builder: it resolves the base image, launches and connects to the temporary instance, and creates the image from it. Provisioners run commands on that instance once it is up, and post-processors act on the artifact after the image already exists.",
+          "source": "https://developer.hashicorp.com/packer/docs/templates/hcl_templates/blocks/build"
+        },
+        {
+          "id": "infrastructure-as-code-building-immutable-amis-with-packer-q2",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Structure an HCL2 template with packer, source, and build blocks",
+          "prompt": "Your template declares `source \"amazon-ebs\" \"app\" { ... }`. How does the build block attach that source?",
+          "options": [
+            {
+              "id": "a",
+              "text": "builders = [\"amazon-ebs\"]"
+            },
+            {
+              "id": "b",
+              "text": "depends_on = [source.amazon-ebs.app]"
+            },
+            {
+              "id": "c",
+              "text": "source = \"amazon-ebs.app\""
+            },
+            {
+              "id": "d",
+              "text": "sources = [\"source.amazon-ebs.app\"]"
+            }
+          ],
+          "answer": [
+            "d"
+          ],
+          "explanation": "A build block lists fully qualified source addresses in its `sources` array, in the form \"source.<type>.<name>\". `builders` is the legacy JSON template key, which HCL2 replaced with source and build blocks.",
+          "source": "https://developer.hashicorp.com/packer/docs/templates/hcl_templates/blocks/build"
+        },
+        {
+          "id": "infrastructure-as-code-building-immutable-amis-with-packer-q3",
+          "type": "multiple_choice",
+          "difficulty": "intermediate",
+          "objective": "Diagnose a build failure caused by a source image and provisioner mismatch",
+          "prompt": "A teammate changed source_ami_filter to select Amazon Linux 2023 but left the shell provisioner running `apt-get install -y nginx`. What happens?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Packer substitutes the equivalent dnf command from the source image metadata"
+            },
+            {
+              "id": "b",
+              "text": "packer validate rejects the template because the provisioner does not match the source OS"
+            },
+            {
+              "id": "c",
+              "text": "The build launches and fails during provisioning, because Amazon Linux uses dnf, not apt"
+            },
+            {
+              "id": "d",
+              "text": "The build succeeds and produces an AMI without nginx installed"
+            }
+          ],
+          "answer": [
+            "c"
+          ],
+          "explanation": "Packer has no knowledge of what a shell provisioner's commands mean, so the mismatch is only discovered when apt-get is not found on the running build instance and the shell provisioner exits non-zero. packer validate checks template syntax and configuration, not whether commands suit the guest OS.",
+          "source": "Lesson section: 'Key Takeaways'"
+        },
+        {
+          "id": "infrastructure-as-code-building-immutable-amis-with-packer-q4",
+          "type": "multi_select",
+          "difficulty": "intermediate",
+          "objective": "Apply the immutable infrastructure workflow to patch a running fleet",
+          "prompt": "A CVE in nginx needs patching across a fleet running from a Packer-built AMI. Which actions belong to the immutable workflow?",
+          "options": [
+            {
+              "id": "a",
+              "text": "Modify the existing AMI in place so instance IDs and the AMI ID stay stable"
+            },
+            {
+              "id": "b",
+              "text": "Run packer build again to produce a new AMI with the patched package"
+            },
+            {
+              "id": "c",
+              "text": "Point the launch template at the new AMI and replace the running instances"
+            },
+            {
+              "id": "d",
+              "text": "Keep a unique ami_name per build so repeated builds do not collide"
+            },
+            {
+              "id": "e",
+              "text": "SSH to each instance and run the package manager upgrade, then rebuild the AMI later"
+            }
+          ],
+          "answer": [
+            "b",
+            "c",
+            "d"
+          ],
+          "explanation": "Immutable infrastructure patches by rebuilding the image and replacing instances, and unique image names (the lesson uses a timestamp in ami_name) keep successive builds distinct. Patching live boxes reintroduces exactly the drift the model removes, and an AMI cannot be edited in place at all.",
+          "source": "Lesson section: 'Step 5: Launch and Verify'"
+        },
+        {
+          "id": "infrastructure-as-code-building-immutable-amis-with-packer-q5",
+          "type": "multiple_choice",
+          "difficulty": "advanced",
+          "objective": "Identify and clean up every billable artifact a Packer build leaves behind",
+          "prompt": "You terminate the test instance and run `aws ec2 deregister-image` on the AMI, yet EBS charges keep accruing. What did you miss, and what should you have done first?",
+          "options": [
+            {
+              "id": "a",
+              "text": "The backing EBS snapshot survives deregistration; read its ID from BlockDeviceMappings first"
+            },
+            {
+              "id": "b",
+              "text": "The AMI is still shared with other accounts; remove its launch permissions before deregistering"
+            },
+            {
+              "id": "c",
+              "text": "Deregistration is asynchronous; the snapshot clears once the operation completes"
+            },
+            {
+              "id": "d",
+              "text": "The temporary build instance is still running; stop it before deregistering the image"
+            }
+          ],
+          "answer": [
+            "a"
+          ],
+          "explanation": "Deregistering an AMI removes only the registration; the EBS snapshot that backs it stays and keeps billing, so you capture the snapshot ID from the image's BlockDeviceMappings before deregistering and then delete it explicitly. Packer terminates its own build instance by default, so a lingering builder is not the usual cause.",
+          "source": "Lesson section: 'Cleanup'"
+        }
+      ]
+    }
+  ]
+}
